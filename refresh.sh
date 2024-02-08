@@ -2,7 +2,7 @@
 
 gitRemote="base"
 gitUrl="https://gitlab.cs.man.ac.uk/a21674fl/comp24412_2023_labs.git"
-gitBranch="lab1"
+gitBranch="lab2"
 
 set -e
 git remote remove "$gitRemote" 2>/dev/null || true
