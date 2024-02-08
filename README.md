@@ -2,10 +2,10 @@
 
 This is the base repo for COMP24412 labs in the academic session 2023-24.
 
-This branch holds the materials for the `lab1` assignment.
+This branch holds the materials for the `lab2` assignment.
 You can always return to this branch with the command
 ```
-git checkout lab1
+git checkout lab2
 ```
 
 There is a refresh script to fetch the lab materials when they become available.
@@ -18,17 +18,17 @@ This can be done with the command
 To submit your work you need to follow the coursework instructions in the
 [CS Handbook](https://wiki.cs.manchester.ac.uk/index.php/UGHandbook22:Coursework#Developing_and_submitting_with_Gitlab).
 Once you commit your solution files as detailed in the lab manual,
-you **must** tag your submission as `lab1_sol` and push this tag to your repo.
+you **must** tag your submission as `lab2_sol` and push this tag to your repo.
 This usually involves the following sequence of commands
 ```
 git add -A .
 git commit
-git tag lab1_sol
+git tag lab2_sol
 git push origin
 git push --tags origin
 ```
 
-The [CS Handbook] (https://wiki.cs.manchester.ac.uk/index.php/UGHandbook22:Coursework#Correcting_an_Incorrect_Tag)
+The [CS Handbook](https://wiki.cs.manchester.ac.uk/index.php/UGHandbook22:Coursework#Correcting_an_Incorrect_Tag)
 also has instructions in case you need to amend your submission and then fix your submission tag.
 
 It is **your responsibility** to ensure that the submission procedure is completed correctly by the appropriate deadline.
