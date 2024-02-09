@@ -1,0 +1,23 @@
+{
+	"vampire_run": {
+		"-ep": "RSTC",
+		"-updr": "off",
+		"-fde": "none",
+		"-nm": 0,
+		"-s": 1,
+		"-awr": "1:1",
+		"-sa": "discount",
+		"-fsr": "off",
+		"-av": "off"
+	},
+	"formulas": {},
+	"proof": [],
+	"resolution": {
+		"active": [],
+		"passive": [],
+		"unprocessed": [],
+		"premises": [],
+		"conclusion": 0,
+		"mgu": [{}, {}]
+	}
+}
