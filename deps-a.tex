@@ -1,0 +1,14 @@
+\documentclass{standalone}
+\usepackage{sourcecodepro}
+\usepackage{forest}
+\begin{document}
+\ttfamily\footnotesize
+\catcode`\~=12
+\catcode`\|=13\let|\textbar
+\catcode`\<=13\let<\textless
+\catcode`\>=13\let>\textgreater
+\forestset{default preamble={for tree={grow'=north}}}
+\begin{forest}
+[{57.\$false}[{51.require(libc)}[{46.require(depend(llvm))}[{45.require(llvm)}[{29.~require(depend(clang)) | require(llvm)}[{18.~sQ0\_eqProxy(X0,X1) | ~require(X0) | require(X1)}][{15.sQ0\_eqProxy(depend(clang),llvm)}]][{22.require(depend(clang))}[{9.~require(X0) | require(depend(X0))}][{12.require(clang)}]]][{9.~require(X0) | require(depend(X0))}]][{30.~require(depend(llvm)) | require(libc)}[{18.~sQ0\_eqProxy(X0,X1) | ~require(X0) | require(X1)}][{16.sQ0\_eqProxy(depend(llvm),libc)}]]][{13.~require(libc)}]]
+\end{forest}
+\end{document}

@@ -1,0 +1,35 @@
+{
+	"vampire_run": {
+		"-ep": "off",
+		"-updr": "on",
+		"-fde": "none",
+		"-nm": 0,
+		"-s": 0,
+		"-awr": "10:1",
+		"-sa": "discount",
+		"-fsr": "off",
+		"-av": "off"
+	},
+	"formulas": {
+        "$false":38,
+        "~require(llvm)":22,
+        "require(llvm)":19,
+        "require(libc) | ~require(llvm)":18,
+        "require(depend(clang))":15,
+        "~require(libc)":13,
+        "require(clang)":12,
+        "depend(llvm) = libc":11,
+        "depend(clang) = llvm":10,
+        "require(depend(X0)) | ~require(X0)":9
+        
+    },
+	"proof": [38, [22, [18,[9],[11]],[13]],[19,[15,[9],[12]],[10]]],
+	"resolution": {
+		"active": [],
+		"passive": [],
+		"unprocessed": [],
+		"premises": [],
+		"conclusion": 0,
+		"mgu": [{}, {}]
+	}
+}

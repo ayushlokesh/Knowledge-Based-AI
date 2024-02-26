@@ -1,0 +1,37 @@
+{
+	"vampire_run": {
+		"-ep": "RSTC",
+		"-updr": "off",
+		"-fde": "none",
+		"-nm": 0,
+		"-s": 1,
+		"-sa": "discount",
+		"-fsr": "off",
+		"-av": "off"
+	},
+	"formulas": {
+        "$false":57,
+        "require(libc)":51,
+        "require(depend(llvm))":46,
+        "require(llvm)":45,
+        "~require(depend(clang)) | require(llvm)":29,
+        "~sQ0_eqProxy(X0,X1) | ~require(X0) | require(X1)":18,
+        "sQ0_eqProxy(depend(clang),llvm)":15,
+        "~require(libc)":13,
+        "~require(depend(llvm)) | require(libc)":30,
+        "~require(X0) | require(depend(X0))":9,
+        "require(depend(clang))":22,
+        "require(clang)":12,
+        "sQ0_eqProxy(depend(llvm),libc)":16
+        
+    },
+	"proof": [57, [51,[46, [45, [29, [18], [15]],[22, [9],[12]]], [9]],[30, [18],[16]]], [13]],
+	"resolution": {
+		"active": [],
+		"passive": [],
+		"unprocessed": [],
+		"premises": [],
+		"conclusion": 0,
+		"mgu": [{}, {}]
+	}
+}
