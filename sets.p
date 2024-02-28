@@ -16,12 +16,7 @@ fof(b, axiom,  ![X]: (
                       )
 ).
 
-fof(c, definition, ![X,Y]: (
-                                imp_subset(X, Y) <=> (![Z]: (member(Z, X) => member(Z,Y))   ) 
-                            )
-).
-
 fof(e, conjecture, ![X,Y]:(
-                            imp_subset(dirimage(X), Y) <=> imp_subset(X, valres(Y))
+                                (equal_sets(dirimage(X), Y) | subset(dirimage(X), Y)) <=> (equal_sets(X, valres(Y)) | subset(X, valres(Y)))
                            )
 ).
