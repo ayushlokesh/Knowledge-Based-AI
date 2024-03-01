@@ -27,11 +27,11 @@
     },
 	"proof": [57, [51,[46, [45, [29, [18], [15]],[22, [9],[12]]], [9]],[30, [18],[16]]], [13]],
 	"resolution": {
-		"active": [],
-		"passive": [],
-		"unprocessed": [],
-		"premises": [],
-		"conclusion": 0,
-		"mgu": [{}, {}]
+		"active": [13,12,19,15,16,9,22,20,25,18],
+		"passive": [21,17,23,24,26,27],
+		"unprocessed": [28,29,30,31],
+		"premises": [18, 16],
+		"conclusion": 30,
+		"mgu": [{"X0":"depend(llvm)", "X1":"libc"}, {}]
 	}
 }
