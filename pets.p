@@ -39,7 +39,7 @@ fof(one_room_lit, axiom, ?[X]: (
                                 )
 ).
 
-fof(c, axiom, ~lit(r4)).
-fof(d, axiom, ~lit(r3)).
-fof(e, axiom, ~lit(r2)).
+%fof(c, axiom, ~lit(r4)).
+%fof(d, axiom, ~lit(r3)).
+%fof(e, axiom, ~lit(r2)).
 
