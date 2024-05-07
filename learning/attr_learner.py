@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, List, Dict
+import math
+from typing import Any, List, Dict, Tuple
 
 from learning.util import Algorithm, AlgorithmRegistry
 
@@ -114,8 +115,9 @@ def same_target(examples: Examples) -> bool:
 
     Returns: Whether the examples all have the same target.
     """
-
-    raise NotImplementedError()
+    ei = examples[0]
+    return all(e['target'] == ei['target'] for e in examples)
+    # raise NotImplementedError()
 
 
 def plurality_value(examples: Examples) -> bool:
@@ -125,9 +127,19 @@ def plurality_value(examples: Examples) -> bool:
         examples: Examples to check.
 
     Returns: True if more examples classified as positive, False otherwise.
-
+    
     """
-    raise NotImplementedError()
+
+    true = 0
+    false = 0
+    for e in examples:
+        if(e['target']):
+            true += 1
+        else:
+            false += 1
+
+    # raise NotImplementedError()
+    return true >= false
 
 
 def binary_entropy(examples: Examples) -> float:
@@ -139,8 +151,45 @@ def binary_entropy(examples: Examples) -> float:
     Returns: The shannon entropy of the classification of the dataset.
 
     """
-    raise NotImplementedError()
 
+    true = 0.0
+    false = 0.0
+
+    for e in examples:
+        if(e['target']):
+            true += 1
+        else:
+            false += 1
+    
+    total = true + false
+
+    if (true == 0.0 and false == 0.0):
+         return 0.0
+    elif true == 0.0:
+        return -(( false/(total) ) * math.log(false/(total), 2))
+    elif false == 0.0:
+
+        return -(( true/(total) ) * math.log(true/(total), 2))
+    else:
+        
+        return -(( true/(total) ) * math.log(true/(total), 2) + ( false/(total) ) * math.log(false/(total), 2))
+
+
+def get_paths(tree: Tree) -> List[List[Tuple[str, Any]]]:
+
+    if (isinstance(tree, Leaf)):
+        return [ [('Leaf', tree.target)] ]
+    
+    paths = None
+    concat_paths = []
+
+    for branch in (tree.branches).keys():
+        paths = get_paths((tree.branches[branch]))
+        for path in paths:
+            path.insert(0, (tree.attr_name, branch))
+            concat_paths.append(path)
+            
+    return concat_paths
 
 def to_logic_expression(tree: Tree) -> AttrLogicExpression:
     """
@@ -151,7 +200,21 @@ def to_logic_expression(tree: Tree) -> AttrLogicExpression:
     Returns: The corresponding logic expression consisting of attribute values, conjunctions and disjunctions.
 
     """
-    raise NotImplementedError()
+    if (tree == None):
+        return Disjunction([])
+
+    paths = get_paths(tree)
+
+
+    dis = []
+    for path in paths:
+        path = dict(path)
+        if((path['Leaf']) == True):
+            path.pop('Leaf')
+            dis.append(Conjunction(path))
+
+    return Disjunction(dis)
+        
 
 
 @AlgorithmRegistry.register("dtl")
@@ -175,6 +238,21 @@ class DecisionTreeLearner(Algorithm):
 
         Returns: A decision tree induced from the given dataset.
         """
+        if len(examples) == 0:
+            return Leaf(plurality_value(parent_examples))
+        
+        elif same_target(examples):
+            return Leaf(examples[0]['target'])
+        
+        else:
+            att = self.get_most_important_attribute(attributes, examples)
+            tree = Node(att, {})
+            for value in set([example[att] for example in examples]):
+                exs = [example for example in examples if example[att] == value]
+                subtree = self.decision_tree_learning(exs, [attr for attr in attributes if attr != att], examples)
+                tree.branches[value] = subtree
+                
+            return tree
 
     def get_most_important_attribute(self, attributes: List[str], examples: Examples) -> str:
         """
@@ -186,7 +264,9 @@ class DecisionTreeLearner(Algorithm):
         Returns: The most informative attribute according to the dataset.
 
         """
-        raise NotImplementedError()
+        list = [(attribute, self.information_gain(examples, attribute)) for attribute in attributes]
+        return max(list, key=lambda x: x[1])[0]
+    
 
     def information_gain(self, examples: Examples, attribute: str) -> float:
         """
@@ -200,7 +280,16 @@ class DecisionTreeLearner(Algorithm):
         Returns: The information gain of the given attribute according to the given observations.
 
         """
-        raise NotImplementedError()
+        h_examples = binary_entropy(examples)
+        h_examples_attr = 0.0
+
+        for value in set([example[attribute] for example in examples]):
+            examples_v = [example for example in examples if example[attribute] == value]
+            h_examples_attr += (len(examples_v) / len(examples)) * binary_entropy(examples_v)
+
+        ig = h_examples - h_examples_attr
+        
+        return ig
 
 
 @AlgorithmRegistry.register("your-algo-name")

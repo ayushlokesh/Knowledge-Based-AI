@@ -288,15 +288,11 @@ class _FOIL(Algorithm):
 
         """
         clauses = []
-        count = 0
         while len(positive_examples) != 0:
-            count += 1
-
             clause = self.new_clause(positive_examples, negative_examples, predicates, target)
             positive_examples = [e for e in positive_examples if not self.covers(clause, e)]
             clauses.append(clause)
 
-            # assert count < 1
             
         return clauses
 
@@ -311,25 +307,18 @@ class _FOIL(Algorithm):
             True if covered, False otherwise
 
         """
-        
-        # list(self.prolog.query(str(clause)))
+        #Create a valid Prolog String
         s = str(clause.body)
+
+        #Replacing the variables with values from the provided example
         for k in example.keys():
             s = s.replace(str(k), example[k])
-        # print(s)
+
         if len(list(self.prolog.query(s))) == 0:
             return False
         return True
 
         
-
-        # if any( 
-        #         all(q[k] == example[k] for k in example.keys())
-        #          for q in list(self.prolog.query(str((clause.body))))):
-        #     return True
-        # return False
-        
-        # raise NotImplementedError()
 
     def new_clause(self, positive_examples: Examples, negative_examples: Examples, predicates: List[Predicate],
                    target: Literal) -> HornClause:
@@ -352,6 +341,7 @@ class _FOIL(Algorithm):
         """
         head = target
         body = []
+
         while len(negative_examples) != 0:
             candidates = self.generate_candidates(HornClause(head, Conjunction(body)), predicates)
             new_literal = self.get_next_literal(candidates, positive_examples, negative_examples)
@@ -360,6 +350,7 @@ class _FOIL(Algorithm):
             new_negative_examples = [ex for neg in negative_examples for ex in self.extend_example(neg, new_literal)]
             positive_examples = new_positive_examples
             negative_examples = new_negative_examples
+        
         return HornClause(head, Conjunction(body))
 
     def get_next_literal(self, candidates: List[Expression], pos_ex: Examples, neg_ex: Examples) -> Expression:
@@ -402,11 +393,14 @@ class _FOIL(Algorithm):
         n0 = len(neg_ex)
         p1 = len(pos_ex_new)
         n1 = len(neg_ex_new)
-        # print(p0, n0, p1, n1)
 
         t = len([p for p in pos_ex if is_represented_by(p, pos_ex_new)])
+
         if(p1 == 0):
             return -999999999999
+        elif (p0 == 0):
+            return t * (log2(p1/(p1 + n1)))
+        
         return t * (log2(p1/(p1 + n1)) -    log2(p0/(p0 + n0)))             
         
     def generate_variable_orderings(self, elements: List[str], extra: List[str], arity: int) -> List[List[str]]:
@@ -414,9 +408,11 @@ class _FOIL(Algorithm):
 
         # Generate all possible combinations with replacement
         all_combinations = []
+
         max_len =  len(elements)
         if arity < max_len:
             max_len = arity
+        
         for r in range(1, max_len + 1):  # Iterate over different sizes
             # Generate combinations of elements
            
@@ -428,7 +424,6 @@ class _FOIL(Algorithm):
                 combination = extra_combination + element_combination
                 all_combinations.append(combination)
             
-        # Print the generated combinations
         all_candidates = set()
         for combination in all_combinations:
             candidate_permutations = itertools.permutations(combination)
@@ -450,17 +445,21 @@ class _FOIL(Algorithm):
             All expressions that could be a reasonable specialisation of `clause`.
 
         """
+        #Calcualting Maximum Arity from Predicate List
         max_arity = max(p.arity for p in predicates)
+        # Required extra variables
         extra_vars = [self.unique_var() for i in range(max_arity-1)]
+
         rule_vars = clause.get_vars()
+
         candidates = []
         for pred in predicates:
             variables = []
+
             if pred.arity > 0:
-                
                 variables = self.generate_variable_orderings(rule_vars, extra_vars[:pred.arity-1], pred.arity)
+            
             for var in variables:
-                
                 candidates.append( Literal(pred, var) )
             
         return candidates
@@ -478,12 +477,11 @@ class _FOIL(Algorithm):
 
         """
         
-        # print("******************************************************************")
         s = str(new_expr)
-        # print(s)
+
         for k in example.keys():
             s = s.replace(str(k), example[k])
-        # print(s)
+        
         return [dict(itertools.chain(example.items(), q.items())) for q in list(self.prolog.query(str(s)))]
 
     def unique_var(self) -> str:
