@@ -1,8 +1,9 @@
 import itertools
+from math import log2
 import re
 from contextlib import contextmanager
 from dataclasses import dataclass, field, astuple
-from typing import List, Generator, Union
+from typing import List, Generator, Union, Tuple
 
 from pyswip import Prolog
 
@@ -203,6 +204,7 @@ def FOIL(dataset: Dataset, recursive=False):
 
 class _FOIL(Algorithm):
     prolog: Prolog
+    var_count: int = -1
 
     def __init__(self, dataset: Dataset, recursive=False):
         super().__init__(dataset)
@@ -232,7 +234,21 @@ class _FOIL(Algorithm):
             dataset.
 
         """
-        raise NotImplementedError()
+        pd = []
+        file_sentences = None
+        preds=[]
+        with open(self.dataset.kb, 'r') as file:
+            # Read the entire contents of the file
+            file_contents = file.read()
+
+        # Split the file contents on '.' and remove empty strings
+            
+            file_sentences = [sentence.strip() for sentence in file_contents.split('.') if sentence.strip()]
+        sets = set()
+        for i in file_sentences:
+            sets.add(get_predicate(i.split(":-")[0]))
+        
+        return list(sets)
 
     def find_hypothesis(self) -> Disjunction:
         """
@@ -271,7 +287,18 @@ class _FOIL(Algorithm):
             A list of horn clauses that as a disjunction cover all positive and none of the negative examples.
 
         """
-        raise NotImplementedError()
+        clauses = []
+        count = 0
+        while len(positive_examples) != 0:
+            count += 1
+
+            clause = self.new_clause(positive_examples, negative_examples, predicates, target)
+            positive_examples = [e for e in positive_examples if not self.covers(clause, e)]
+            clauses.append(clause)
+
+            # assert count < 1
+            
+        return clauses
 
     def covers(self, clause: HornClause, example: Example) -> bool:
         """
@@ -284,7 +311,25 @@ class _FOIL(Algorithm):
             True if covered, False otherwise
 
         """
-        raise NotImplementedError()
+        
+        # list(self.prolog.query(str(clause)))
+        s = str(clause.body)
+        for k in example.keys():
+            s = s.replace(str(k), example[k])
+        # print(s)
+        if len(list(self.prolog.query(s))) == 0:
+            return False
+        return True
+
+        
+
+        # if any( 
+        #         all(q[k] == example[k] for k in example.keys())
+        #          for q in list(self.prolog.query(str((clause.body))))):
+        #     return True
+        # return False
+        
+        # raise NotImplementedError()
 
     def new_clause(self, positive_examples: Examples, negative_examples: Examples, predicates: List[Predicate],
                    target: Literal) -> HornClause:
@@ -305,7 +350,17 @@ class _FOIL(Algorithm):
             negative examples.
 
         """
-        raise NotImplementedError()
+        head = target
+        body = []
+        while len(negative_examples) != 0:
+            candidates = self.generate_candidates(HornClause(head, Conjunction(body)), predicates)
+            new_literal = self.get_next_literal(candidates, positive_examples, negative_examples)
+            body.append(new_literal)
+            new_positive_examples = [ex for pos in positive_examples for ex in self.extend_example(pos, new_literal)]
+            new_negative_examples = [ex for neg in negative_examples for ex in self.extend_example(neg, new_literal)]
+            positive_examples = new_positive_examples
+            negative_examples = new_negative_examples
+        return HornClause(head, Conjunction(body))
 
     def get_next_literal(self, candidates: List[Expression], pos_ex: Examples, neg_ex: Examples) -> Expression:
         """
@@ -321,6 +376,7 @@ class _FOIL(Algorithm):
             from a given dataset of positive and negative examples.
 
         """
+        return max(candidates, key=lambda c: self.foil_information_gain(c, pos_ex, neg_ex))
 
     def foil_information_gain(self, candidate: Expression, pos_ex: Examples, neg_ex: Examples) -> float:
         """
@@ -335,8 +391,52 @@ class _FOIL(Algorithm):
         Returns: The information gain of the given attribute according to the given observations.
 
         """
-        raise NotImplementedError()
+        pos_ex_new = []
+        for ex in pos_ex:
+            pos_ex_new += self.extend_example(ex, candidate)
+        neg_ex_new = []
+        for ex in neg_ex:
+            neg_ex_new += self.extend_example(ex,candidate)
+        
+        p0 = len(pos_ex)
+        n0 = len(neg_ex)
+        p1 = len(pos_ex_new)
+        n1 = len(neg_ex_new)
+        # print(p0, n0, p1, n1)
 
+        t = len([p for p in pos_ex if is_represented_by(p, pos_ex_new)])
+        if(p1 == 0):
+            return -999999999999
+        return t * (log2(p1/(p1 + n1)) -    log2(p0/(p0 + n0)))             
+        
+    def generate_variable_orderings(self, elements: List[str], extra: List[str], arity: int) -> List[List[str]]:
+        
+
+        # Generate all possible combinations with replacement
+        all_combinations = []
+        max_len =  len(elements)
+        if arity < max_len:
+            max_len = arity
+        for r in range(1, max_len + 1):  # Iterate over different sizes
+            # Generate combinations of elements
+           
+            element_combinations = itertools.combinations_with_replacement(elements, r)
+            # Generate combinations of extra variables
+            extra_combinations = itertools.combinations_with_replacement(extra,max_len-r)
+           
+            for extra_combination, element_combination in itertools.product(element_combinations,extra_combinations):
+                combination = extra_combination + element_combination
+                all_combinations.append(combination)
+            
+        # Print the generated combinations
+        all_candidates = set()
+        for combination in all_combinations:
+            candidate_permutations = itertools.permutations(combination)
+            for perm in candidate_permutations:
+                all_candidates.add(perm)
+
+        return [list(candidate) for candidate in all_candidates]
+    
     def generate_candidates(self, clause: HornClause, predicates: List[Predicate]) -> Generator[Expression, None, None]:
         """
         This method generates all reasonable (as discussed in the lecture) specialisations of a horn clause
@@ -350,7 +450,20 @@ class _FOIL(Algorithm):
             All expressions that could be a reasonable specialisation of `clause`.
 
         """
-        raise NotImplementedError()
+        max_arity = max(p.arity for p in predicates)
+        extra_vars = [self.unique_var() for i in range(max_arity-1)]
+        rule_vars = clause.get_vars()
+        candidates = []
+        for pred in predicates:
+            variables = []
+            if pred.arity > 0:
+                
+                variables = self.generate_variable_orderings(rule_vars, extra_vars[:pred.arity-1], pred.arity)
+            for var in variables:
+                
+                candidates.append( Literal(pred, var) )
+            
+        return candidates
 
     def extend_example(self, example: Example, new_expr: Expression) -> Generator[Example, None, None]:
         """
@@ -364,7 +477,14 @@ class _FOIL(Algorithm):
             A generator that yields all possible substitutions for a given example an an expression.
 
         """
-        raise NotImplementedError()
+        
+        # print("******************************************************************")
+        s = str(new_expr)
+        # print(s)
+        for k in example.keys():
+            s = s.replace(str(k), example[k])
+        # print(s)
+        return [dict(itertools.chain(example.items(), q.items())) for q in list(self.prolog.query(str(s)))]
 
     def unique_var(self) -> str:
         """
@@ -374,7 +494,8 @@ class _FOIL(Algorithm):
             the next uniquely named variable in the following format: `V_i` where `i` is a number.
 
         """
-        raise NotImplementedError()
+        self.var_count += 1
+        return f"V_{self.var_count}"
 
 
 def is_represented_by(example: Example, examples: Examples) -> bool:
@@ -389,4 +510,5 @@ def is_represented_by(example: Example, examples: Examples) -> bool:
         the values are equal (potential additional variables in `e` do not need to be considered). False otherwise.
 
     """
-    raise NotImplementedError()
+    return any(example.items() <= e.items() for e in examples)
+    
