@@ -116,8 +116,8 @@ def same_target(examples: Examples) -> bool:
     Returns: Whether the examples all have the same target.
     """
     ei = examples[0]
+    #Return True if classification of all examples are same as the first element of the list
     return all(e['target'] == ei['target'] for e in examples)
-    # raise NotImplementedError()
 
 
 def plurality_value(examples: Examples) -> bool:
@@ -132,13 +132,12 @@ def plurality_value(examples: Examples) -> bool:
 
     true = 0
     false = 0
+    #Count number of true and false classifications
     for e in examples:
         if(e['target']):
             true += 1
         else:
-            false += 1
-
-    # raise NotImplementedError()
+            false += 1 
     return true >= false
 
 
@@ -163,26 +162,28 @@ def binary_entropy(examples: Examples) -> float:
     
     total = true + false
 
+    #Edge Case - 1
     if (true == 0.0 and false == 0.0):
          return 0.0
+    #Edge Case - 2
     elif true == 0.0:
         return -(( false/(total) ) * math.log(false/(total), 2))
+    #Edge Case - 3
     elif false == 0.0:
-
         return -(( true/(total) ) * math.log(true/(total), 2))
+    #Return the value of general formula
     else:
-        
         return -(( true/(total) ) * math.log(true/(total), 2) + ( false/(total) ) * math.log(false/(total), 2))
 
 
 def get_paths(tree: Tree) -> List[List[Tuple[str, Any]]]:
-
+    #Base Case
     if (isinstance(tree, Leaf)):
         return [ [('Leaf', tree.target)] ]
     
     paths = None
     concat_paths = []
-
+    #Traversing the Tree recursively
     for branch in (tree.branches).keys():
         paths = get_paths((tree.branches[branch]))
         for path in paths:
@@ -200,9 +201,11 @@ def to_logic_expression(tree: Tree) -> AttrLogicExpression:
     Returns: The corresponding logic expression consisting of attribute values, conjunctions and disjunctions.
 
     """
+    #Edge Case - 1
     if (tree == None):
         return Disjunction([])
 
+    #Get all paths
     paths = get_paths(tree)
 
 
@@ -238,12 +241,14 @@ class DecisionTreeLearner(Algorithm):
 
         Returns: A decision tree induced from the given dataset.
         """
+        #Base case - 1
         if len(examples) == 0:
             return Leaf(plurality_value(parent_examples))
-        
+        #Base Case - 2
         elif same_target(examples):
             return Leaf(examples[0]['target'])
         
+        #Step Case
         else:
             att = self.get_most_important_attribute(attributes, examples)
             tree = Node(att, {})

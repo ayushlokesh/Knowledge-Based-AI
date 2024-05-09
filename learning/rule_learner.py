@@ -241,11 +241,12 @@ class _FOIL(Algorithm):
             # Read the entire contents of the file
             file_contents = file.read()
 
-        # Split the file contents on '.' and remove empty strings
-            
+            # Split the file contents on '.' and remove empty strings
             file_sentences = [sentence.strip() for sentence in file_contents.split('.') if sentence.strip()]
+        
         sets = set()
         for i in file_sentences:
+            #Add the head predicate if the rule has body, else its only single predicate
             sets.add(get_predicate(i.split(":-")[0]))
         
         return list(sets)
@@ -314,6 +315,7 @@ class _FOIL(Algorithm):
         for k in example.keys():
             s = s.replace(str(k), example[k])
 
+        #check if the prolog query has solutions
         if len(list(self.prolog.query(s))) == 0:
             return False
         return True
@@ -343,9 +345,12 @@ class _FOIL(Algorithm):
         body = []
 
         while len(negative_examples) != 0:
+            #Get candidates
             candidates = self.generate_candidates(HornClause(head, Conjunction(body)), predicates)
+            #Get best candidates
             new_literal = self.get_next_literal(candidates, positive_examples, negative_examples)
             body.append(new_literal)
+            #Update Examples
             new_positive_examples = [ex for pos in positive_examples for ex in self.extend_example(pos, new_literal)]
             new_negative_examples = [ex for neg in negative_examples for ex in self.extend_example(neg, new_literal)]
             positive_examples = new_positive_examples
@@ -395,9 +400,10 @@ class _FOIL(Algorithm):
         n1 = len(neg_ex_new)
 
         t = len([p for p in pos_ex if is_represented_by(p, pos_ex_new)])
-
+        #Edge Case - 1 ----> if the new candidate does not cover any positive examples, it is not needed
         if(p1 == 0):
             return -999999999999
+        #Edge Case - 2 ----> if p0 = 0, it will appear in for all other candidates hence the significant comparison can be made by just single term
         elif (p0 == 0):
             return t * (log2(p1/(p1 + n1)))
         
@@ -414,8 +420,7 @@ class _FOIL(Algorithm):
             max_len = arity
         
         for r in range(1, max_len + 1):  # Iterate over different sizes
-            # Generate combinations of elements
-           
+            # Generate combinations of elements (rule variables)
             element_combinations = itertools.combinations_with_replacement(elements, r)
             # Generate combinations of extra variables
             extra_combinations = itertools.combinations_with_replacement(extra,max_len-r)
